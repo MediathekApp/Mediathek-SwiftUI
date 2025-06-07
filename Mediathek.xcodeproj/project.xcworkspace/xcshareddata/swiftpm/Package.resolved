@@ -1,0 +1,33 @@
+{
+  "originHash" : "64a02a9669aafcbe007423bab8fbf27b863a12658abdc6b565ce52acd1a602c3",
+  "pins" : [
+    {
+      "identity" : "dsfsearchfield",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dagronf/DSFSearchField",
+      "state" : {
+        "revision" : "8f118439e1e74b3afb8dc8cbdc049d7979aa045e",
+        "version" : "2.2.2"
+      }
+    },
+    {
+      "identity" : "sdwebimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImage.git",
+      "state" : {
+        "revision" : "cac9a55a3ae92478a2c95042dcc8d9695d2129ca",
+        "version" : "5.21.0"
+      }
+    },
+    {
+      "identity" : "sdwebimageswiftui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImageSwiftUI",
+      "state" : {
+        "revision" : "451c6dfd5ecec2cf626d1d9ca81c2d4a60355172",
+        "version" : "3.1.3"
+      }
+    }
+  ],
+  "version" : 3
+}
