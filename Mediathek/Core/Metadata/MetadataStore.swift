@@ -230,9 +230,9 @@ class MetadataStore {
         ) { data, response, error in
 
             // Measure the time taken for the request
-            let elapsed = Date.now.timeIntervalSince(now)
+            let elapsedMs: Int = Int(round((Date.now.timeIntervalSince(now) * 1000)))
             log(
-                "⏱️ \(elapsed * 1000) ms for remote cache request for \(urn)",
+                "⏱️ \(elapsedMs) ms for remote cache request for \(urn)",
                 .debug
             )
 

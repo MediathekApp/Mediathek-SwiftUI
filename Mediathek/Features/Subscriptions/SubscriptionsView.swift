@@ -332,7 +332,7 @@ struct SubscriptionIconText: View {
                     ? .black : .white
             )
             .opacity(isSelected ? 1.0 : 0.5)
-            .animation(.easeInOut(duration: 0.3), value: isSelected)
+//            .animation(.easeInOut(duration: 0.3), value: isSelected)
             .overlay {
                 let indicatorSize = 30.0
                 RadialGradient(

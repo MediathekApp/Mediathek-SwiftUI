@@ -130,6 +130,37 @@ class JavaScriptManager {
             forKeyedSubscript: "nativeLog" as NSString
         )
         
+        func userDefaultsKeyForTokenName(_ tokenName: String) -> String {
+            return "APIToken "+tokenName
+        }
+        
+        
+        let swiftSetTokenFunction: @convention(block) (String, String) -> Void = {
+            tokenName,
+            tokenValue in
+            
+            UserDefaults.standard.setValue(tokenValue, forKey: userDefaultsKeyForTokenName(tokenName))
+            
+        }
+
+        context.setObject(
+            swiftSetTokenFunction,
+            forKeyedSubscript: "saveToken" as NSString
+        )
+        
+        let swiftGetTokenFunction: @convention(block) (String) -> String? = {
+            tokenName in
+            
+            return UserDefaults.standard.string(forKey: userDefaultsKeyForTokenName(tokenName))
+            
+        }
+
+        context.setObject(
+            swiftGetTokenFunction,
+            forKeyedSubscript: "getToken" as NSString
+        )
+
+        
         // Load the JavaScript from our cloud bundle:
         guard let jsCode = CloudBundle.shared.getJS() else {
             log("Failed to load JavaScript from cloud bundle", .error)
