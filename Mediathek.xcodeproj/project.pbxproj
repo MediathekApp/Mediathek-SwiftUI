@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CF2B5B392DF0D868004FED7D /* DSFSearchField in Frameworks */ = {isa = PBXBuildFile; productRef = CF2B5B382DF0D868004FED7D /* DSFSearchField */; };
 		CF7228382DE8F1C000A728E2 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = CF7228372DE8F1C000A728E2 /* SDWebImageSwiftUI */; };
 		CFD8C9242DF44698003A5D96 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CFD8C9232DF44698003A5D96 /* README.md */; };
 		CFD8CA262DF4806F003A5D96 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = CFD8CA252DF4806F003A5D96 /* LICENSE */; };
@@ -76,7 +75,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CF7228382DE8F1C000A728E2 /* SDWebImageSwiftUI in Frameworks */,
-				CF2B5B392DF0D868004FED7D /* DSFSearchField in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,7 +139,6 @@
 			name = Mediathek;
 			packageProductDependencies = (
 				CF7228372DE8F1C000A728E2 /* SDWebImageSwiftUI */,
-				CF2B5B382DF0D868004FED7D /* DSFSearchField */,
 			);
 			productName = Mediathek;
 			productReference = CFF68C972DE8583F00668597 /* Mediathek.app */;
@@ -229,7 +226,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				CF7228362DE8F1C000A728E2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
-				CF2B5B372DF0D868004FED7D /* XCRemoteSwiftPackageReference "DSFSearchField" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CFF68C982DE8583F00668597 /* Products */;
@@ -315,7 +311,7 @@
 				CODE_SIGN_ENTITLEMENTS = Mediathek/Mediathek.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 864M4652BP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -332,10 +328,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wehlte.Mediathek;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -358,7 +354,7 @@
 				CODE_SIGN_ENTITLEMENTS = Mediathek/Mediathek.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 864M4652BP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -375,10 +371,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wehlte.Mediathek;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -641,14 +637,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CF2B5B372DF0D868004FED7D /* XCRemoteSwiftPackageReference "DSFSearchField" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dagronf/DSFSearchField";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.2.2;
-			};
-		};
 		CF7228362DE8F1C000A728E2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI";
@@ -660,11 +648,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CF2B5B382DF0D868004FED7D /* DSFSearchField */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CF2B5B372DF0D868004FED7D /* XCRemoteSwiftPackageReference "DSFSearchField" */;
-			productName = DSFSearchField;
-		};
 		CF7228372DE8F1C000A728E2 /* SDWebImageSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CF7228362DE8F1C000A728E2 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;

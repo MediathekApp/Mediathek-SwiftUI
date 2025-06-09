@@ -11,28 +11,63 @@ import JavaScriptCore
 class MetadataCollector {
     
     static let shared = MetadataCollector()
-    let jsManager = JavaScriptManager()
+    var jsManager = JavaScriptManager()
+    
+    #if DEBUG
+    var lastLoad: Date = Date.distantPast
+    #endif
+    
+    func prepare(_ callback: @escaping () -> Void) {
+        #if DEBUG
+        // Use a fresh context for each request during debugging
+        if Date.now.timeIntervalSince(lastLoad) > 5 {
+            self.lastLoad = Date.now
+            CloudBundle.shared.download(from: URL(string: AppConfig.cloudBundleURL)!) { result in
+                self.jsManager = JavaScriptManager()
+                callback()
+            }
+        } else {
+            callback()
+        }
+        #else
+        callback()
+        #endif
+    }
     
     func collectMetadataForItem(urn: String, _ callback: @escaping (String?) -> Void) {
-        jsManager.getMetadataForItem(urn: urn, callback: callback)
+        prepare {
+            self.jsManager.getMetadataForItem(urn: urn, callback: callback)
+        }
+    }
+    
+    func collectMetadataForProgram(urn: String, _ callback: @escaping (String?) -> Void) {
+        prepare {
+            self.jsManager.getMetadataForProgram(urn: urn, callback: callback)
+        }
     }
     
     func getUrnForUrl(url: String, callback: @escaping (String?) -> Void) {
-        if url.starts(with: "urn:") {
-            callback(url)
-            return
-        }
-        jsManager.getUrnForUrl(url: url) { result in
-            callback(result)
+        prepare {
+            if url.starts(with: "urn:") {
+                callback(url)
+                return
+            }
+            self.jsManager.getUrnForUrl(url: url) { result in
+                callback(result)
+            }
         }
     }
 
     func collectProgramFeed(urn: String, callback: @escaping (String?) -> Void) {
-        jsManager.getProgramFeed(urn: urn, callback: callback)
+        prepare {
+            self.jsManager.getProgramFeed(urn: urn, callback: callback)
+        }
     }
     
     func collectProgramList(publisherId: String, callback: @escaping (String?) -> Void) {
-        jsManager.getProgramList(publisherId: publisherId, callback: callback)
+        prepare {
+            self.jsManager.getProgramList(publisherId: publisherId, callback: callback)
+        }
     }
 
 }
@@ -45,8 +80,25 @@ class JavaScriptManager {
         
         // Error logging
         context.exceptionHandler = { _, exception in
+            guard let exception = exception else {
+                log("❌ JS Exception: unknown error", .error)
+                return
+            }
+
+            let exceptionMessage = exception.toString() ?? "Unknown error"
+            
+            // These properties are often present on JS Error objects
+            let lineNumber = exception.objectForKeyedSubscript("line")?.toInt32() ?? -1
+            let columnNumber = exception.objectForKeyedSubscript("column")?.toInt32() ?? -1
+            let stackTrace = exception.objectForKeyedSubscript("stack")?.toString() ?? "No stack trace"
+
             log(
-                "❌ JS Exception: \(exception?.toString() ?? "unknown error")",
+                """
+                ❌ JS Exception: \(exceptionMessage)
+                ➤ Line: \(lineNumber), Column: \(columnNumber)
+                ➤ Stack trace:
+                \(stackTrace)
+                """,
                 .error
             )
         }
@@ -178,7 +230,11 @@ class JavaScriptManager {
     func getMetadataForItem(urn: String, callback: @escaping (String?) -> Void) {
         runJavaScriptCode(syncFunctionNameOrSilentExceptions: "getMetadataForItem", stringArgument: urn, callback: callback)
     }
-    
+
+    func getMetadataForProgram(urn: String, callback: @escaping (String?) -> Void) {
+        runJavaScriptCode(syncFunctionNameOrSilentExceptions: "getMetadataForProgram", stringArgument: urn, callback: callback)
+    }
+
     func getProgramFeed(urn: String, callback: @escaping (String?) -> Void) {
         runJavaScriptCode(syncFunctionNameOrSilentExceptions: "getProgramFeed", stringArgument: urn, callback: callback)
     }

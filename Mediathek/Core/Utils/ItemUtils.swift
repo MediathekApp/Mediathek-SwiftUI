@@ -143,6 +143,7 @@ func ItemDemo() -> Item {
             items: nil,
             publisher: "ZDF",
             feedCaptured: Date.now.timeIntervalSince1970,
+            captured: Date.now.timeIntervalSince1970,
             description: nil,
             homepage: nil,
             image: nil

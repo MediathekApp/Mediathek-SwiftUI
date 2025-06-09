@@ -5,8 +5,9 @@
 //  Created by Jon on 29.05.25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
+
 #if canImport(UIKit)
     import UIKit
 #elseif canImport(AppKit)
@@ -17,7 +18,7 @@ struct ContentView: View {
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.modelContext) private var modelContext
-    
+
     @State private var searchFieldFrame: CGRect = .zero  // State to store the frame
     @State private var showDownloadsButton = true
     @State private var isTargetByDrop = false
@@ -27,7 +28,7 @@ struct ContentView: View {
     @AppStorage("searchText") private var searchText = ""
     @ObservedObject var navManager = NavigationManager.shared
     #if os(macOS)
-    @ObservedObject var dockState = DockState.shared
+        @ObservedObject var dockState = DockState.shared
     #endif
 
     @Namespace private var topID  // = "top"
@@ -44,19 +45,18 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
 
-                
                 #if os(macOS)
-                SwipeDetectorView { direction in
-                    switch direction {
-                    case .Left:
-                        navManager.goBack()
-                    case .Right:
-                        navManager.goForward()
-                    default:
-                        break
-                    }
+                    SwipeDetectorView { direction in
+                        switch direction {
+                        case .Left:
+                            navManager.goBack()
+                        case .Right:
+                            navManager.goForward()
+                        default:
+                            break
+                        }
 
-                }.frame(height: 0)
+                    }.frame(height: 0)
                 #endif
 
                 if let currentEntry = navManager.currentEntry {
@@ -80,7 +80,8 @@ struct ContentView: View {
                                         .id(topID)
                                         .offset(
                                             y:
-                                                -(AppConfig.subscriptionsDockHeight
+                                                -(AppConfig
+                                                .subscriptionsDockHeight
                                                 - visibleHeight) / 2
                                         )
                                         .frame(height: visibleHeight)
@@ -91,11 +92,11 @@ struct ContentView: View {
 
                             }
                             #if os(macOS)
-                            .overlay {
-                                ScrollOffsetCoordinator(
-                                    scrollOffsetStore: scrollOffsetStore
-                                ).frame(width: 0, height: 0)
-                            }
+                                .overlay {
+                                    ScrollOffsetCoordinator(
+                                        scrollOffsetStore: scrollOffsetStore
+                                    ).frame(width: 0, height: 0)
+                                }
                             #endif
                             .onChange(of: scrollToTopToggle) {
                                 oldState,
@@ -131,7 +132,6 @@ struct ContentView: View {
                                 iterations: 4
                             )
 
-
                         }
 
                     }
@@ -148,41 +148,41 @@ struct ContentView: View {
 
                     //                    }
 
-//                    if navManager.currentEntry?.viewType == .Program {
-//
-//                        HStack {
-//
-//                            if let program = navManager.currentEntry?.state
-//                                .program
-//                            {
-//                                Button("sub") {
-//                                    SubscriptionManager.shared.add(
-//                                        program,
-//                                        modelContext: modelContext
-//                                    )
-//                                }
-//                            }
-//
-//                        }
-//                        .background(
-//                            colorScheme == .light
-//                                ? Color(white: 0.96) : Color(white: 0.15)
-//                        )
-//                        .frame(height: 40)
-//
-//                    }
-                    
+                    //                    if navManager.currentEntry?.viewType == .Program {
+                    //
+                    //                        HStack {
+                    //
+                    //                            if let program = navManager.currentEntry?.state
+                    //                                .program
+                    //                            {
+                    //                                Button("sub") {
+                    //                                    SubscriptionManager.shared.add(
+                    //                                        program,
+                    //                                        modelContext: modelContext
+                    //                                    )
+                    //                                }
+                    //                            }
+                    //
+                    //                        }
+                    //                        .background(
+                    //                            colorScheme == .light
+                    //                                ? Color(white: 0.96) : Color(white: 0.15)
+                    //                        )
+                    //                        .frame(height: 40)
+                    //
+                    //                    }
+
                 } else {
                     ZStack {
 
                         #if os(macOS)
-                        VisualEffectView(
-                            material: .sidebar,
-                            blendingMode: .behindWindow,
-                            state: .followsWindowActiveState
-                        )
-                        .edgesIgnoringSafeArea(.all)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            VisualEffectView(
+                                material: .sidebar,
+                                blendingMode: .behindWindow,
+                                state: .followsWindowActiveState
+                            )
+                            .edgesIgnoringSafeArea(.all)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         #endif
                         //                        Text("Hello")
                         //                        Spacer()
@@ -204,65 +204,76 @@ struct ContentView: View {
 
         #if os(iOS)
             // TODO:
-                .searchable(text: $searchText, placement: .toolbar)/* {
-        
+            .searchable(
+                text: $searchText,
+                placement: .toolbar
+            ) /* {
+
                     ForEach(queryStore.suggestions) { suggestion
                         Text(suggestion.name ?? "?")
                             .searchCompletion(suggestion.name ?? "?")
                     }
                     .searchSuggestions(.hidden, for: .content)
-        
+
                 }*/
-                .searchSuggestions {
-                    HStack { Text("Sendung"); Spacer(); Text("SENDUNG") }.searchCompletion("foo")
-                }
-                .onSubmit(of: .search) {
-                    search(searchText, modelContext: modelContext)
-                }
+            .searchSuggestions {
+                HStack {
+                    Text("Sendung")
+                    Spacer()
+                    Text("SENDUNG")
+                }.searchCompletion("foo")
+            }
+            .onSubmit(of: .search) {
+                search(searchText, modelContext: modelContext)
+            }
         #endif
 
         #if os(macOS)
-        .onDrop(
-            of: ["public.utf8-plain-text"],
-            isTargeted: $isTargetByDrop
-        ) { providers -> Bool in
+            .onDrop(
+                of: ["public.utf8-plain-text"],
+                isTargeted: $isTargetByDrop
+            ) { providers -> Bool in
 
-            // provider.loadDataRepresentation API is broken - providers.types is empty when dropping an linked image.
-            // We use NSPasteboard here.
+                // provider.loadDataRepresentation API is broken - providers.types is empty when dropping an linked image.
+                // We use NSPasteboard here.
 
-            let pasteboard = NSPasteboard(name: .drag)
+                let pasteboard = NSPasteboard(name: .drag)
 
-            if let urls = pasteboard.readObjects(forClasses: [NSURL.self]) {
-                if let firstURL = urls.first as? URL {
-                    log("\(firstURL)")
-                    search(firstURL.absoluteString, modelContext: modelContext)
-                    return true
+                if let urls = pasteboard.readObjects(forClasses: [NSURL.self]) {
+                    if let firstURL = urls.first as? URL {
+                        log("\(firstURL)")
+                        search(
+                            firstURL.absoluteString,
+                            modelContext: modelContext
+                        )
+                        return true
+                    }
                 }
+
+                if let strings = pasteboard.readObjects(forClasses: [
+                    NSString.self
+                ]) {
+                    if let firstString = strings.first as? String {
+                        log("\(firstString)")
+                        search(firstString, modelContext: modelContext)
+                        return true
+                    }
+                }
+
+                return false
             }
 
-            if let strings = pasteboard.readObjects(forClasses: [NSString.self])
-            {
-                if let firstString = strings.first as? String {
-                    log("\(firstString)")
-                    search(firstString, modelContext: modelContext)
-                    return true
+            .onChange(
+                of: dockState.droppedText,
+                { oldState, newState in
+                    if let newState {
+                        log("Got from Dock: \(newState)")
+                        search(newState, modelContext: modelContext)
+                    }
                 }
-            }
-
-            return false
-        }
-
-        .onChange(
-            of: dockState.droppedText,
-            { oldState, newState in
-                if let newState {
-                    log("Got from Dock: \(newState)")
-                    search(newState, modelContext: modelContext)
-                }
-            }
-        )
+            )
         #endif
-        
+
         .toolbar {
 
             // Left Side: Back, Forward, Home
@@ -290,31 +301,33 @@ struct ContentView: View {
             ToolbarItemGroup(placement: .secondaryAction) {
 
                 #if os(macOS)
-                SuggestionSearchField(
-                    text: $searchText,
-                    onSelectSuggestion: { suggestion in
+                    SuggestionSearchField(
+                        text: $searchText,
+                        onSelectSuggestion: { suggestion in
 
-                        if let programs = suggestion.programs {
-                            if !programs.isEmpty {
-                                let urn = programs.first
-                                if let urn {
-                                    GoToProgram(urn, modelContext: modelContext)
-                                    return
+                            if let programs = suggestion.programs {
+                                if !programs.isEmpty {
+                                    let urn = programs.first
+                                    if let urn {
+                                        GoToProgram(
+                                            urn,
+                                            modelContext: modelContext
+                                        )
+                                        return
+                                    }
                                 }
                             }
+
+                            search(suggestion.query, modelContext: modelContext)
+
+                        },
+                        onSearch: { query in
+                            search(query, modelContext: modelContext)
                         }
-
-                        search(suggestion.query, modelContext: modelContext)
-
-                    },
-                    onSearch: { query in
-                        search(query, modelContext: modelContext)
-                    }
-                )
-                .frame(width: 200, alignment: .center)
-                .frame(minWidth: 150, maxWidth: .infinity)
+                    )
+                    .frame(width: 200, alignment: .center)
+                    .frame(minWidth: 150, maxWidth: .infinity)
                 #endif
-
 
             }
 
@@ -354,13 +367,11 @@ struct ContentView: View {
                     }
                 }
 
-
             }
 
         }
 
     }
-
 
     internal func scrollToTop() {
         scrollToTopToggle.toggle()
@@ -391,8 +402,10 @@ struct ContentView: View {
 
     }
 
-    internal func loadItem(_ urn: String, maxAge: TimeInterval = MetadataCacheMaxAge)
-    {
+    internal func loadItem(
+        _ urn: String,
+        maxAge: TimeInterval = MetadataCacheMaxAge
+    ) {
 
         MetadataStore.shared.requestItem(
             for: urn,
@@ -491,32 +504,37 @@ struct ContentView: View {
                 for searchResult in searchResponse.organic {
 
                     dispatchGroup.enter()
-                    MetadataCollector.shared.getUrnForUrl(url: searchResult.link) {
+                    MetadataCollector.shared.getUrnForUrl(
+                        url: searchResult.link
+                    ) {
                         urn in
 
-                        if let urn = urn {
-                            log("- URN: \(urn)")
-                            urns.append(urn)
-                            
-                            var type: SearchResultType = .Item
-                            if URNGetValueAtIndex(urn, 3) == "program" {
-                                type = .Program
-                            }
-                            
-                            let store = SearchResultRowModelRepository.shared.forSearchResult(
-                                searchResult
-                            )
-                            
-                            store.urn = urn
-                            store.type = type
-                            
-                        } else {
-                            log("- No URN for \(searchResult.link)")
-                            SearchResultRowModelRepository.shared.forSearchResult(
-                                searchResult
-                            ).type = .Invalid
+                        DispatchQueue.main.async {
+                            if let urn = urn {
+                                log("- URN: \(urn)")
+                                urns.append(urn)
 
+                                var type: SearchResultType = .Item
+                                if URNGetValueAtIndex(urn, 3) == "program" {
+                                    type = .Program
+                                }
+
+                                let store = SearchResultRowModelRepository
+                                    .shared.forSearchResult(
+                                        searchResult
+                                    )
+                                store.urn = urn
+                                store.type = type
+
+                            } else {
+                                log("- No URN for \(searchResult.link)")
+                                SearchResultRowModelRepository.shared
+                                    .forSearchResult(
+                                        searchResult
+                                    ).type = .Invalid
+                            }
                         }
+
                         dispatchGroup.leave()
 
                     }
@@ -533,20 +551,23 @@ struct ContentView: View {
                         maxAge: MetadataCacheMaxAge
                     ) { items in
 
-                        for item in items {
-                            if let urn = item.urn {
-                                if let store = SearchResultRowModelRepository.shared
-                                    .forUrn(urn)
-                                {
-                                    store.item = item
-                                } else {
-                                    log("Issue row not found for \(urn)")
+                        DispatchQueue.main.async {
+                            for item in items {
+                                if let urn = item.urn {
+                                    if let store =
+                                        SearchResultRowModelRepository.shared
+                                        .forUrn(urn)
+                                    {
+                                        store.item = item
+                                    } else {
+                                        log("Issue row not found for \(urn)", .warning)
+                                    }
                                 }
                             }
+
                         }
 
                     }
-
 
                 }
 
@@ -561,8 +582,10 @@ struct ContentView: View {
         MetadataStore.shared.callRemoteCache(
             urn: searchUrn,
         ) { jsonString, lastModified in
-            
-            let isExpired = lastModified != nil && Date.now.timeIntervalSince(lastModified!) > maxAge
+
+            let isExpired =
+                lastModified != nil
+                && Date.now.timeIntervalSince(lastModified!) > maxAge
 
             if jsonString != nil && isExpired == false {
                 log("Found valid cache entry for search response.")
@@ -606,7 +629,6 @@ struct ContentView: View {
 
     }
 
-
     internal func backgroundColorForNavigationEntry(_ entry: NavigationEntry?)
         -> Color
     {
@@ -621,12 +643,10 @@ struct ContentView: View {
         return Color.clear
     }
 
-
     internal func refreshAllSubscriptions() {
         SubscriptionManager.shared.refreshAllSubscriptions(
             modelContext: modelContext
         )
     }
-
 
 }

@@ -11,8 +11,7 @@ import SwiftData
 struct ProgramView: View {
 
     var state: NavigationEntryState
-    @State private var itemStates: [SubscriptionItemUserState] = []
-    
+        
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -34,9 +33,9 @@ struct ProgramView: View {
                         
                         withAnimation {
                             if let subscription = state.subscription {
-                                SubscriptionManager.shared.remove(subscription, modelContext: modelContext)
+                                SubscriptionManager.shared.unsubscribe(subscription, modelContext: modelContext)
                             } else {
-                                SubscriptionManager.shared.add(
+                                SubscriptionManager.shared.subscribe(
                                     program,
                                     modelContext: modelContext
                                 )
@@ -46,10 +45,6 @@ struct ProgramView: View {
                     }
 
                 }
-
-                Spacer()
-
-                //            Text("Items: \(program.items?.count ?? 0)").opacity(0.25)
 
                 // Stretch to full width
                 Spacer().frame(maxWidth: .infinity)
@@ -62,24 +57,27 @@ struct ProgramView: View {
 
                             ForEach(items, id: \.id) { item in
 
-                                ItemRow(
-                                    item: item,
-                                    showUnseenIndicator: isItemUnseen(item),
-                                    showsSource: false
-                                )
-                                .padding(.vertical, 4)
-                                .id(item.urn)
+                                if let subscription = state.subscription {
+                                    SubscriptionItemRow(
+                                        item: item,
+                                        subscription: subscription,
+                                        modelContext: modelContext
+                                    )
+                                    .padding(.vertical, 4)
+                                    .id("sub-"+(item.id))
+                                }
+                                else {
+                                    ItemRow(
+                                        item: item,
+                                        showUnseenIndicator: false,
+                                        showsSource: false,
+                                    )
+                                    .padding(.vertical, 4)
+                                    .id(item.id)
+                                }
 
                             }
                         }
-                        //                    header: {
-                        //
-                        //                        Text("Beiträge")
-                        //                            .font(.title2)
-                        //                            .fontWeight(.medium)
-                        //                            .foregroundColor(.gray)
-                        //
-                        //                    }
 
                     }
 
@@ -97,30 +95,11 @@ struct ProgramView: View {
             .padding(.horizontal, 16 + 8)
             .padding(.vertical, 16)
             .frame(maxWidth: 800, alignment: .leading)
-            .onAppear() {
-                loadItemStates(modelContext: modelContext)
-            }
-            .onChange(of: state.subscription) { oldValue, newValue in
-                loadItemStates(modelContext: modelContext)
-            }
 
         }
 
     }
     
-    func loadItemStates(modelContext: ModelContext) {
-        if let program = state.program, let subscription = state.subscription {
-            itemStates = SubscriptionManager.shared.itemStatesForProgram(program, subscription: subscription, modelContext: modelContext)
-        }
-    }
-    
-    func isItemUnseen(_ item: Item) -> Bool {
-        if state.subscription != nil {
-            let state = itemStates.first { state in state.id == item.id }
-            return state?.isSeen != true
-        }
-        return false
-    }
     
 }
 

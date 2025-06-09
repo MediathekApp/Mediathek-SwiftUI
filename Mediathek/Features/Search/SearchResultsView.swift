@@ -22,12 +22,12 @@ struct SearchResultsView: View {
                         ForEach(response.organic, id: \.link) { searchResult in
                             
                             let store = SearchResultRowModelRepository.shared.forSearchResult(searchResult)
-                            if store.urn != nil {
+//                            if store.urn != nil {
                                 
                                 SearchResultRow(store: store)
                                     .padding(.vertical, 4)
                                 
-                            }
+//                            }
                             
                         }
                     } header: {

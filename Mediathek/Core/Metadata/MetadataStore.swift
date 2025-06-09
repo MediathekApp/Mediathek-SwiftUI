@@ -15,6 +15,7 @@ class MetadataStore {
         urn: String,
         maxAge: TimeInterval = MetadataCacheMaxAge,
         strategy: MetadataStoreRequestStrategy = .All,
+        // Callback parameters: jsonString, source, isStillValid
         callback: @escaping (String?, MetadataStoreSource?, Bool) -> Void,
     ) {
 
@@ -264,8 +265,6 @@ class MetadataStore {
         callback: @escaping (String?, Date?) -> Void
     ) {
 
-//        log("Handle remote cache response", .debug)
-
         guard let data = data, error == nil,
             let httpResponse = response as? HTTPURLResponse
         else {
@@ -290,7 +289,6 @@ class MetadataStore {
 
             let lastModifiedHeader =
                 httpResponse.allHeaderFields["Last-Modified"] as? String
-//            log("Last-Modified: \(lastModifiedHeader ?? "N/A")", .debug)
 
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "en_US_POSIX")  // super important for fixed format parsing
@@ -443,7 +441,7 @@ class MetadataStore {
         task.resume()
     }
 
-    // Batch-read items
+    // Batch-read items:
     internal func requestMetadataSequentially(
         urns urnsIn: [String],
         maxAge: TimeInterval,
@@ -569,7 +567,7 @@ class MetadataStore {
                         return (a.broadcasts ?? 0.0) >= (b.broadcasts ?? 0.0)
                     }
 
-                    self.requestProgramMetadata(for: urn, maxAge: MetadataCacheMaxAge)
+                    self.requestProgramMetadata(for: urn, maxAge: 60*60*24)
                     { programInfo, source in
 
                         let program = Program(
@@ -579,6 +577,7 @@ class MetadataStore {
                             items: sortedItems,
                             publisher: programInfo?.publisher,
                             feedCaptured: feedCaptured,
+                            captured: programInfo?.captured,
                             description: programInfo?.description,
                             homepage: programInfo?.homepage,
                             image: programInfo?.image,
@@ -603,21 +602,36 @@ class MetadataStore {
     }
 
     internal func requestProgramMetadata(
-        for programUrn: String,
+        for programURN: String,
         maxAge: TimeInterval,
         callback: @escaping (Program?, MetadataStoreSource?) -> Void
     ) {
-
-        let publisherId = URNGetPublisherID(programUrn)
-        let programId = URNGetID(programUrn)
-
-        requestProgramList(for: publisherId) { list, source in
-
-            let match = list?.first { el in
-                el.id == programId
+        
+        let publisherID = URNGetPublisherID(programURN)
+        let programID = URNGetID(programURN)
+        let programMetaURN = "urn:mediathek:\(publisherID):program-meta:\(programID)"
+        
+        request(urn: programMetaURN, maxAge: maxAge) { jsonString, source, notExpired in
+            
+            if jsonString == nil || !notExpired {
+                MetadataCollector.shared.collectMetadataForProgram(urn: programURN) { jsonString in
+                    if let jsonString {
+                        let program = decodeJSON(jsonString, as: Program.self)
+                        callback(program, .Collect)
+                        
+                        if let json = encodeToJSON(program) {
+                            MetadataCache.shared.set(urn: programMetaURN, json, Date.now)
+                            self.storeValueInRemoteCache(for: programMetaURN, value: json)
+                        }
+                    }
+                    else {
+                        callback(nil, .Collect)
+                    }
+                }
+            } else {
+                callback(decodeJSON(jsonString!, as: Program.self), source)
             }
-            callback(match, source)
-
+            
         }
 
     }

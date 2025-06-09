@@ -12,6 +12,7 @@ struct Program: Decodable, Encodable, Identifiable {
     let items: [Item]?
     let publisher: String?
     let feedCaptured: Double?
+    let captured: Double?
     let description: String?
     let homepage: String?
     let image: [ImageVariant]?

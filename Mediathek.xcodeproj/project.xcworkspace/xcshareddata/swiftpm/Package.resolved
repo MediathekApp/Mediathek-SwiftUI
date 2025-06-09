@@ -1,15 +1,6 @@
 {
-  "originHash" : "64a02a9669aafcbe007423bab8fbf27b863a12658abdc6b565ce52acd1a602c3",
+  "originHash" : "3f7bccddd9f7a6da7c38f78f12dc05fb594b560bb42e698a68570a70f4650e54",
   "pins" : [
-    {
-      "identity" : "dsfsearchfield",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/dagronf/DSFSearchField",
-      "state" : {
-        "revision" : "8f118439e1e74b3afb8dc8cbdc049d7979aa045e",
-        "version" : "2.2.2"
-      }
-    },
     {
       "identity" : "sdwebimage",
       "kind" : "remoteSourceControl",

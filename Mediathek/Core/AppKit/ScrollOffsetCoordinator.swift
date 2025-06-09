@@ -26,11 +26,13 @@ struct ScrollOffsetCoordinator: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        context.coordinator.updateOffsetsIfNeeded(
-            scrollOffsetStore.xOffset,
-            scrollOffsetStore.yOffset,
-            animationDuration: scrollOffsetStore.animationDuration
-        )
+        DispatchQueue.main.async {
+            context.coordinator.updateOffsetsIfNeeded(
+                scrollOffsetStore.xOffset,
+                scrollOffsetStore.yOffset,
+                animationDuration: scrollOffsetStore.animationDuration
+            )
+        }
     }
 
     class Coordinator: NSObject {
@@ -111,6 +113,7 @@ struct ScrollOffsetCoordinator: NSViewRepresentable {
             _ newOffsetYOrNull: CGFloat?,
             animationDuration: TimeInterval = 0
         ) {
+            
             guard let scrollView = scrollView else { return }
 
             if isUpdatingFromScroll {

@@ -27,29 +27,14 @@ class SubscriptionManager {
             maxAge: maxAge
         ) { program, source in
 
-            //            if source == .LocalCache { return } // no update
-
             if let program {
                 self.updateUnseenCount(
                     subscription: sub,
                     program: program,
                     modelContext: modelContext
                 )
-            }
-
-            if let urn = NavigationManager.shared.currentEntry?.state.program?
-                .urn
-            {
-                if urn == sub.urn {
-                    let state = NavigationEntryState()
-                    state.program = program
-                    state.subscription = sub
-                    NavigationManager.shared.replace(
-                        to: NavigationEntry(
-                            viewType: .Program,
-                            state: state
-                        )
-                    )
+                if let programURN = program.urn {
+                    self.updateSubscriptionView(programURN: programURN, subscription: sub, modelContext: modelContext)
                 }
             }
 
@@ -108,8 +93,16 @@ class SubscriptionManager {
         timer?.cancel()
         timer = nil
     }
+    
+    func trySave(_ modelContext: ModelContext) {
+        do {
+            try modelContext.save()
+        } catch {
+            log("Failed to save: \(error)", .error)
+        }
+    }
 
-    func remove(
+    func unsubscribe(
         _ sub: Subscription,
         modelContext: ModelContext /*, animated: Bool = true*/
     ) {
@@ -117,27 +110,36 @@ class SubscriptionManager {
         let subscriptionURN = sub.urn
 
         modelContext.delete(sub)
-
-        if let program = NavigationManager.shared.currentEntry?.state.program {
-            if program.urn == subscriptionURN {
-                let state = NavigationEntryState()
-                state.program = program
-                state.subscription = nil
-                NavigationManager.shared.replace(
-                    to: NavigationEntry(
-                        viewType: .Program,
-                        state: state
-                    )
-                )
-            }
-        }
-
+        trySave(modelContext)
+        
+        itemStatePool.drain()
+        
+        self.updateSubscriptionView(programURN: subscriptionURN, subscription: nil, modelContext: modelContext)
+ 
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.5) {
             let remaining = self.getSubscriptions(modelContext)
             if remaining?.isEmpty == true {
                 withAnimation {
                     ContentViewModel.shared.showSubscriptions = false
                 }
+            }
+        }
+
+    }
+    
+    func updateSubscriptionView(programURN: String, subscription: Subscription?, modelContext: ModelContext) {
+                
+        if let shownProgram = NavigationManager.shared.currentEntry?.state.program {
+            if shownProgram.urn == programURN {
+                let state = NavigationEntryState()
+                state.program = shownProgram
+                state.subscription = subscription
+                NavigationManager.shared.replace(
+                    to: NavigationEntry(
+                        viewType: .Program,
+                        state: state
+                    )
+                )
             }
         }
 
@@ -163,6 +165,39 @@ class SubscriptionManager {
 
     }
 
+    let itemStatePool = ModelPool<SubscriptionItemUserState>()
+    
+    func pooledItemState(for itemID: String, subscription: Subscription, modelContext: ModelContext) -> SubscriptionItemUserState {
+        
+        if let pooled = itemStatePool.instance(forID: itemID) {
+            return pooled
+        }
+
+        if let existing = try? modelContext.fetch(
+            FetchDescriptor<SubscriptionItemUserState>(
+                predicate: #Predicate { $0.id == itemID }
+            )
+        ).first {
+            
+            return itemStatePool.pooledInstance(for: existing)
+
+        } else {
+
+            // Create a new state:
+            let newState = SubscriptionItemUserState(
+                id: itemID,
+                isSeen: false,
+                seenAt: Date.now,
+                subscription: subscription
+            )
+            modelContext.insert(newState)
+            
+            return itemStatePool.pooledInstance(for: newState)
+
+        }
+        
+    }
+    
     func itemStatesForProgram(
         _ program: Program,
         subscription: Subscription,
@@ -170,15 +205,6 @@ class SubscriptionManager {
     ) -> [SubscriptionItemUserState] {
 
         do {
-            //            let itemStatesFetch = FetchDescriptor<SubscriptionItemUserState>(
-            //                predicate: #Predicate {
-            //                    $0.subscription.id == subscription.id
-            //                },
-            //                //sortBy: [SortDescriptor(\.seenAt)]
-            //            )
-            //            let itemStates = try modelContext.fetch(itemStatesFetch)
-            //            return itemStates
-
             if let itemIDs: [String] = program.items?.map({ item in
                 item.id
             }) {
@@ -191,7 +217,12 @@ class SubscriptionManager {
                 let matchingStates = try modelContext.fetch(
                     FetchDescriptor(predicate: predicate)
                 )
-                return matchingStates
+                
+                var pooledStates: [SubscriptionItemUserState] = []
+                for state in matchingStates {
+                    pooledStates.append(itemStatePool.pooledInstance(for: state))
+                }
+                return pooledStates
             }
 
         } catch {
@@ -201,7 +232,7 @@ class SubscriptionManager {
 
     }
 
-    func add(
+    func subscribe(
         _ program: Program,
         modelContext: ModelContext /*, animated: Bool = true*/
     ) {
@@ -224,6 +255,7 @@ class SubscriptionManager {
             )
 
             modelContext.insert(newSub)
+            trySave(modelContext)
 
             if let subscriptions = getSubscriptions(modelContext) {
                 RecommendationService.shared
@@ -263,39 +295,28 @@ class SubscriptionManager {
         subscription: Subscription,
         program: Program,
         modelContext: ModelContext,
-        seen: Bool = true
+        seen: Bool = true,
+        andSave: Bool = true,
+        andUpdateUnseenCount: Bool = true
     ) {
 
         // Upsert the item state:
-        if let existing = try? modelContext.fetch(
-            FetchDescriptor<SubscriptionItemUserState>(
-                predicate: #Predicate { $0.id == item.id }
-            )
-        ).first {
-
-            // Update the existing state:
-            existing.isSeen = seen
-            existing.seenAt = Date.now
-            existing.subscription = subscription
-
-        } else {
-
-            // Create a new state:
-            let newState = SubscriptionItemUserState(
-                id: item.id,
-                isSeen: seen,
-                seenAt: Date.now,
-                subscription: subscription
-            )
-            modelContext.insert(newState)
-
+        let itemState = pooledItemState(for: item.id, subscription: subscription, modelContext: modelContext)
+        itemState.isSeen = seen
+        itemState.seenAt = Date.now
+        itemState.subscription = subscription
+        
+        if andSave {
+            trySave(modelContext)
         }
 
-        updateUnseenCount(
-            subscription: subscription,
-            program: program,
-            modelContext: modelContext
-        )
+        if andUpdateUnseenCount {
+            updateUnseenCount(
+                subscription: subscription,
+                program: program,
+                modelContext: modelContext
+            )
+        }
 
     }
 
@@ -320,17 +341,77 @@ class SubscriptionManager {
 
         withAnimation {
             subscription.unseenCount = count
+            trySave(modelContext)
         }
 
     }
 
     func markAllSeen(
-        subscription: Subscription,
-        program: Program,
+        _ subscription: Subscription,
         modelContext: ModelContext,
         seen: Bool = true
     ) {
-        log("Not implemented yet", .warning)
+        
+        MetadataStore.shared.requestProgramWithItems(urn: subscription.urn) { program, source in
+            
+            if let program, let items = program.items, let programURN = program.urn {
+                
+                for item in items {
+                    self.markSeen(item: item, subscription: subscription, program: program, modelContext: modelContext, andUpdateUnseenCount: false)
+                }
+                
+                self.updateUnseenCount(
+                    subscription: subscription,
+                    program: program,
+                    modelContext: modelContext
+                )
+                
+                self.updateSubscriptionView(programURN: programURN, subscription: subscription, modelContext: modelContext)
+
+            }
+            
+        }
+        
+    }
+    
+}
+
+final class ModelPool<T: PersistentModel & Identifiable> {
+    private var byPersistentID: [PersistentIdentifier: T] = [:]
+    private var byStringID: [String: PersistentIdentifier] = [:]
+
+    func pooledInstance(for model: T) -> T {
+        let pid = model.persistentModelID
+        let sid = model.id as? String
+        
+        if let existing = byPersistentID[pid] {
+            return existing
+        }
+
+        byPersistentID[pid] = model
+        if let sid {
+            byStringID[sid] = pid
+        }
+        return model
     }
 
+    func instance(forID stringID: String) -> T? {
+        guard let pid = byStringID[stringID] else { return nil }
+        return byPersistentID[pid]
+    }
+
+    func update(with model: T) {
+        let pid = model.persistentModelID
+        let sid = model.id as? String
+
+        byPersistentID[pid] = model
+        if let sid {
+            byStringID[sid] = pid
+        }
+    }
+
+    func drain() {
+        byPersistentID.removeAll()
+        byStringID.removeAll()
+    }
 }

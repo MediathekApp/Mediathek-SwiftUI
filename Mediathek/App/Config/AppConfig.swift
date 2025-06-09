@@ -19,8 +19,8 @@ enum AppConfig {
     static let subscriptionsDockHeight = 84.0
     static let useBrightSubscriptionsBackground = true
     static let unseenColor = Color(red: 15.0/255.0, green: 126.0/255.0, blue: 255.0/255.0)
-    static let maxFeedItems = 30
-    static let maxBatchCollectItems = 30
+    static let maxFeedItems = 15
+    static let maxBatchCollectItems = 15
     static let writeOutDayBeforeYesterday = true // "Vorgestern"
 
     #if os(macOS)

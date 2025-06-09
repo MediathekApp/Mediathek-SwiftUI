@@ -11,21 +11,20 @@ import SwiftUI
 
 struct ItemRow: View {
 
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.modelContext) var modelContext
+
     var item: Item? = nil
+    var subscription: Subscription? = nil
     var searchResult: SerperDevSearchResult?
 
     var showUnseenIndicator: Bool = false
     var showsSource = true
 
-    @State private var didMarkSeen = false
-
-    @Environment(\.modelContext) var modelContext
-
-    let thumbnailCornerRadius = 0.0
-
     let indicatorColor: Color = AppConfig.unseenColor
     let indicatorSize: CGFloat = 8
     let thumbnailSize = CGSizeMake(100, 60)
+    let thumbnailCornerRadius = 0.0
 
     var body: some View {
 
@@ -93,7 +92,7 @@ struct ItemRow: View {
 
                     // Title
                     HStack(alignment: .center, spacing: 6) {
-                        if showUnseenIndicator && !didMarkSeen {
+                        if showUnseenIndicator {
                             Circle()
                                 .fill(indicatorColor)
                                 .frame(
@@ -128,6 +127,7 @@ struct ItemRow: View {
                         let originatorOrPublisher =
                             item?.originator ?? item?.publisher
                         let programName = item?.program?.name
+                        let programIdIsValid = item?.program?.id != nil && item?.program?.id.isEmpty == false
                         if let originatorOrPublisher {
                             Text(originatorOrPublisher)
                                 .opacity(0.5)
@@ -139,15 +139,15 @@ struct ItemRow: View {
                             Text(programName)
                                 .fontWeight(.medium)
                                 .opacity(0.7)
-                                .pointingHandCursor(item?.program?.id != nil)
+                                .pointingHandCursor(programIdIsValid)
                                 .onTapGesture {
-                                    if let urn = item?.urn {
-                                        if let program = item?.program {
+                                    if programIdIsValid {
+                                        if let urn = item?.urn, let program = item?.program {
                                             let publisherId = URNGetPublisherID(
                                                 urn
                                             )
                                             let programUrn =
-                                                "urn:mediathek:\(publisherId):program:\(program.id)"
+                                            "urn:mediathek:\(publisherId):program:\(program.id)"
                                             GoToProgram(
                                                 programUrn,
                                                 modelContext: modelContext
@@ -191,16 +191,31 @@ struct ItemRow: View {
                     }
                     .padding(.top, 4)
                 }
+                
+                // Stretch to full width
+                Spacer()
+                    .frame(height: 0)
+                    .frame(maxWidth: .infinity)
 
             }
             .frame(minHeight: 70)
 
         }
-
+        .contextMenu {
+            if let webpageURL = item?.webpageURL {
+                Button("Web-URL kopieren") {
+                    copyToPasteboard(webpageURL)
+                }
+            }
+            if let urn = item?.urn {
+                Button("URN kopieren") {
+                    copyToPasteboard(urn)
+                }
+            }
+        }
+        
     }
-
-    @Environment(\.colorScheme) var colorScheme
-
+    
     internal func findBestThumbnailURL() -> URL {
         if let item {
             return ItemFindBestImageForThumbnail(item)
@@ -220,7 +235,6 @@ struct ItemRow: View {
                 program: program,
                 modelContext: modelContext
             )
-            didMarkSeen = true
         }
     }
 

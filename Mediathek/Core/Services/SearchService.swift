@@ -59,7 +59,8 @@ class SerperDevSearchService: SearchService {
             return
         }
         
-        var request = URLRequest(url: URL(string: "https://google.serper.dev/search?q=\(encodedQuery)+\(SerperDevSearchService.searchScopeSuffix)&gl=de&hl=de&num=30&apiKey=\(apiKey)")!,timeoutInterval: 5)
+        let numberOfResults = 15
+        var request = URLRequest(url: URL(string: "https://google.serper.dev/search?q=\(encodedQuery)+\(SerperDevSearchService.searchScopeSuffix)&gl=de&hl=de&num=\(numberOfResults)&apiKey=\(apiKey)")!,timeoutInterval: 5)
         request.httpMethod = "GET"
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in

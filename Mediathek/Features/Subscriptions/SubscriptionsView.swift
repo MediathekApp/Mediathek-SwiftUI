@@ -16,44 +16,6 @@ internal let badgeTextColor: Color = Color.white
 internal let numberBadgeRelativeOffsetX: CGFloat = 0
 internal let numberBadgeRelativeOffsetY: CGFloat = +3
 
-//class SubscriptionsViewContentStore: ObservableObject {
-//
-//    @Published var subscriptions: [Subscription] = []
-//    private var modelContext: ModelContext
-//
-////    @Query(sort: \Subscription.addedDate, order: .reverse) var subscriptions: [Subscription]
-//
-////    static var shared = SubscriptionsViewContentStore()
-//
-//    init(modelContext: ModelContext) {
-//        self.modelContext = modelContext
-//        fetchSubscriptions()
-//    }
-//
-//    func fetchSubscriptions() {
-//        let descriptor = FetchDescriptor<Subscription>(
-//            sortBy: [SortDescriptor(\.addedDate, order: .reverse)]
-//        )
-//        do {
-//            subscriptions = try modelContext.fetch(descriptor)
-//        } catch {
-//            print("Failed to fetch subscriptions: \(error)")
-//        }
-//    }
-//
-//    func addSubscription(name: String, urn: String) {
-//        let newSub = Subscription(name: name, urn: urn, imageURL: "")
-//        modelContext.insert(newSub)
-//    }
-//
-//    func deleteSubscription(at offsets: IndexSet) {
-//        for index in offsets {
-//            let sub = subscriptions[index]
-//            modelContext.delete(sub)
-//        }
-//    }
-//
-//}
 
 class SubscriptionsViewScrollStore: ScrollOffsetStore {
 
@@ -191,11 +153,11 @@ struct SubscriptionsView: View {
                         Button("Aktualisieren") {
                             SubscriptionManager.shared.refresh(subscription, modelContext: modelContext)
                         }
-//                        Button("Alle gesehen markieren") {
-//                            SubscriptionManager.shared.markAllSeen(modelContext: <#T##ModelContext#>)
-//                        }
+                        Button("Alle als gesehen markieren") {
+                            SubscriptionManager.shared.markAllSeen(subscription, modelContext: modelContext)
+                        }
                         Button("Entfernen") {
-                            SubscriptionManager.shared.remove(
+                            SubscriptionManager.shared.unsubscribe(
                                 subscription,
                                 modelContext: modelContext
                             )

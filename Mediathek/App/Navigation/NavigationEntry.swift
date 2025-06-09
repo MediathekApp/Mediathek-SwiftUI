@@ -27,5 +27,6 @@ class NavigationEntryState: ObservableObject {
     @Published var search: Search? = nil
     @Published var explorePage: ExploreViewModel? = nil
     @Published var subscription: Subscription? = nil
+//    @Published var itemStateViewUpdateToggle: Bool = false
 }
 
