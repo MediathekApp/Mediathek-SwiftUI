@@ -5,7 +5,7 @@
 //  Created by Jon on 29.05.25.
 //
 
-import SwiftUICore
+import SwiftUI
 #if (os(macOS))
 import AppKit
 #endif

@@ -5,7 +5,7 @@
 //  Created by Jon on 07.06.25.
 //
 
-import SwiftUICore
+import SwiftUI
 
 struct DetailRowView: View {
     var label: String

@@ -16,6 +16,8 @@ struct ItemDetailView: View {
 
     @State private var isHovering = false
 
+    @Environment(\.colorScheme) var colorScheme
+
     private func renderDurationAndRelativeDate() -> AttributedString {
 
         let item = state.item
@@ -94,7 +96,7 @@ struct ItemDetailView: View {
                                             if let program {
                                                 let publisherId = URNGetPublisherID(urn)
                                                 let programUrn = "urn:mediathek:\(publisherId):program:\(program.id)"
-                                                GoToProgram(programUrn, modelContext: modelContext)
+                                                GoToProgram(programUrn)
                                             }
                                         }
                                     }
@@ -326,9 +328,6 @@ struct ItemDetailView: View {
 //        }
     }
     
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.modelContext) var modelContext
-
     internal func providerIconImageName(_ item: Item?) -> String? {
         return nil
     }

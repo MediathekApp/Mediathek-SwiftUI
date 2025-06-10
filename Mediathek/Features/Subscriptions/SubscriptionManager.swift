@@ -13,12 +13,13 @@ import SwiftUI
 class SubscriptionManager {
 
     static var shared = SubscriptionManager()
+    
+    var modelContext: ModelContext? = nil
 
     let autorefreshInterval: TimeInterval = 60 * 60
 
     func refresh(
         _ sub: Subscription,
-        modelContext: ModelContext,
         maxAge: TimeInterval = 0
     ) {
 
@@ -31,10 +32,9 @@ class SubscriptionManager {
                 self.updateUnseenCount(
                     subscription: sub,
                     program: program,
-                    modelContext: modelContext
                 )
                 if let programURN = program.urn {
-                    self.updateSubscriptionView(programURN: programURN, subscription: sub, modelContext: modelContext)
+                    self.updateSubscriptionView(programURN: programURN, subscription: sub)
                 }
             }
 
@@ -43,16 +43,15 @@ class SubscriptionManager {
     }
 
     func refreshAllSubscriptions(
-        modelContext: ModelContext,
         maxAge: TimeInterval = 60 * 30
     ) {
 
         do {
             let fetchDescriptor = FetchDescriptor<Subscription>()
-            let subscriptions = try modelContext.fetch(fetchDescriptor)
+            let subscriptions = try modelContext!.fetch(fetchDescriptor)
 
             for sub in subscriptions {
-                refresh(sub, modelContext: modelContext, maxAge: maxAge)
+                refresh(sub, maxAge: maxAge)
             }
 
         } catch {
@@ -64,12 +63,11 @@ class SubscriptionManager {
     private var timer: AnyCancellable?
 
     func scheduleAutoRefresh(
-        modelContext: ModelContext,
         runInitially: Bool = false
     ) {
 
         func performOperation() {
-            refreshAllSubscriptions(modelContext: modelContext)
+            refreshAllSubscriptions()
         }
 
         // Only start if the timer isn't already running
@@ -94,9 +92,9 @@ class SubscriptionManager {
         timer = nil
     }
     
-    func trySave(_ modelContext: ModelContext) {
+    func trySave() {
         do {
-            try modelContext.save()
+            try modelContext!.save()
         } catch {
             log("Failed to save: \(error)", .error)
         }
@@ -104,20 +102,19 @@ class SubscriptionManager {
 
     func unsubscribe(
         _ sub: Subscription,
-        modelContext: ModelContext /*, animated: Bool = true*/
     ) {
 
         let subscriptionURN = sub.urn
 
-        modelContext.delete(sub)
-        trySave(modelContext)
+        modelContext!.delete(sub)
+        trySave()
         
         itemStatePool.drain()
         
-        self.updateSubscriptionView(programURN: subscriptionURN, subscription: nil, modelContext: modelContext)
+        self.updateSubscriptionView(programURN: subscriptionURN, subscription: nil)
  
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.5) {
-            let remaining = self.getSubscriptions(modelContext)
+            let remaining = self.getSubscriptions()
             if remaining?.isEmpty == true {
                 withAnimation {
                     ContentViewModel.shared.showSubscriptions = false
@@ -127,7 +124,7 @@ class SubscriptionManager {
 
     }
     
-    func updateSubscriptionView(programURN: String, subscription: Subscription?, modelContext: ModelContext) {
+    func updateSubscriptionView(programURN: String, subscription: Subscription?) {
                 
         if let shownProgram = NavigationManager.shared.currentEntry?.state.program {
             if shownProgram.urn == programURN {
@@ -145,12 +142,12 @@ class SubscriptionManager {
 
     }
 
-    func subscriptionByURN(_ urn: String, modelContext: ModelContext)
+    func subscriptionByURN(_ urn: String)
         -> Subscription?
     {
 
         do {
-            let existingSubscriptions = try modelContext.fetch(
+            let existingSubscriptions = try modelContext!.fetch(
                 FetchDescriptor<Subscription>(
                     predicate: #Predicate { $0.urn == urn }
                 )
@@ -167,13 +164,13 @@ class SubscriptionManager {
 
     let itemStatePool = ModelPool<SubscriptionItemUserState>()
     
-    func pooledItemState(for itemID: String, subscription: Subscription, modelContext: ModelContext) -> SubscriptionItemUserState {
+    func pooledItemState(for itemID: String, subscription: Subscription) -> SubscriptionItemUserState {
         
         if let pooled = itemStatePool.instance(forID: itemID) {
             return pooled
         }
 
-        if let existing = try? modelContext.fetch(
+        if let existing = try? modelContext!.fetch(
             FetchDescriptor<SubscriptionItemUserState>(
                 predicate: #Predicate { $0.id == itemID }
             )
@@ -190,7 +187,7 @@ class SubscriptionManager {
                 seenAt: Date.now,
                 subscription: subscription
             )
-            modelContext.insert(newState)
+            modelContext!.insert(newState)
             
             return itemStatePool.pooledInstance(for: newState)
 
@@ -201,7 +198,6 @@ class SubscriptionManager {
     func itemStatesForProgram(
         _ program: Program,
         subscription: Subscription,
-        modelContext: ModelContext
     ) -> [SubscriptionItemUserState] {
 
         do {
@@ -214,7 +210,7 @@ class SubscriptionManager {
                         && itemIDs.contains(state.id)
                 }
 
-                let matchingStates = try modelContext.fetch(
+                let matchingStates = try modelContext!.fetch(
                     FetchDescriptor(predicate: predicate)
                 )
                 
@@ -234,13 +230,12 @@ class SubscriptionManager {
 
     func subscribe(
         _ program: Program,
-        modelContext: ModelContext /*, animated: Bool = true*/
     ) {
 
         if let urn = program.urn {
 
             // Avoid duplicates:
-            if subscriptionByURN(urn, modelContext: modelContext) != nil {
+            if subscriptionByURN(urn) != nil {
                 log("Subscription already exists for \(urn)", .warning)
                 return
             }
@@ -254,10 +249,10 @@ class SubscriptionManager {
                 )?.url
             )
 
-            modelContext.insert(newSub)
-            trySave(modelContext)
+            modelContext!.insert(newSub)
+            trySave()
 
-            if let subscriptions = getSubscriptions(modelContext) {
+            if let subscriptions = getSubscriptions() {
                 RecommendationService.shared
                     .getProgramRecommendationsForNewSubscription(subscriptions)
                 { programs in
@@ -271,18 +266,18 @@ class SubscriptionManager {
 
             // Refresh with a small delay for a smooth animation:
             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                self.refresh(newSub, modelContext: modelContext)
+                self.refresh(newSub)
             }
 
         }
 
     }
 
-    func getSubscriptions(_ modelContext: ModelContext) -> [Subscription]? {
+    func getSubscriptions() -> [Subscription]? {
 
         do {
             let fetchDescriptor = FetchDescriptor<Subscription>()
-            return try modelContext.fetch(fetchDescriptor)
+            return try modelContext!.fetch(fetchDescriptor)
         } catch {
             log("Failed to get subscriptions: \(error)")
             return nil
@@ -294,27 +289,25 @@ class SubscriptionManager {
         item: Item,
         subscription: Subscription,
         program: Program,
-        modelContext: ModelContext,
         seen: Bool = true,
         andSave: Bool = true,
         andUpdateUnseenCount: Bool = true
     ) {
 
         // Upsert the item state:
-        let itemState = pooledItemState(for: item.id, subscription: subscription, modelContext: modelContext)
+        let itemState = pooledItemState(for: item.id, subscription: subscription)
         itemState.isSeen = seen
         itemState.seenAt = Date.now
         itemState.subscription = subscription
         
         if andSave {
-            trySave(modelContext)
+            trySave()
         }
 
         if andUpdateUnseenCount {
             updateUnseenCount(
                 subscription: subscription,
                 program: program,
-                modelContext: modelContext
             )
         }
 
@@ -323,13 +316,11 @@ class SubscriptionManager {
     func updateUnseenCount(
         subscription: Subscription,
         program: Program,
-        modelContext: ModelContext
     ) {
 
         let itemStates = SubscriptionManager.shared.itemStatesForProgram(
             program,
             subscription: subscription,
-            modelContext: modelContext
         )
 
         var count = program.items?.count ?? 0
@@ -341,14 +332,13 @@ class SubscriptionManager {
 
         withAnimation {
             subscription.unseenCount = count
-            trySave(modelContext)
+            trySave()
         }
 
     }
 
     func markAllSeen(
         _ subscription: Subscription,
-        modelContext: ModelContext,
         seen: Bool = true
     ) {
         
@@ -357,16 +347,17 @@ class SubscriptionManager {
             if let program, let items = program.items, let programURN = program.urn {
                 
                 for item in items {
-                    self.markSeen(item: item, subscription: subscription, program: program, modelContext: modelContext, andUpdateUnseenCount: false)
+                    self.markSeen(item: item, subscription: subscription, program: program, andSave: false, andUpdateUnseenCount: false)
                 }
+                
+                self.trySave()
                 
                 self.updateUnseenCount(
                     subscription: subscription,
                     program: program,
-                    modelContext: modelContext
                 )
                 
-                self.updateSubscriptionView(programURN: programURN, subscription: subscription, modelContext: modelContext)
+                self.updateSubscriptionView(programURN: programURN, subscription: subscription)
 
             }
             

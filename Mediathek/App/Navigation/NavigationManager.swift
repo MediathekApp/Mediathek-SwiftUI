@@ -5,7 +5,7 @@
 //  Created by Jon on 07.06.25.
 //
 
-import SwiftUICore
+import SwiftUI
 
 class NavigationManager: ObservableObject {
     

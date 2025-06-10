@@ -5,13 +5,11 @@
 //  Created by Jon on 09.06.25.
 //
 
-import SwiftUICore
+import SwiftUI
 import SwiftData
 
 struct SubscriptionItemRow: View {
     
-    @Environment(\.modelContext) var modelContext
-
     var item: Item
     var subscription: Subscription
     
@@ -22,10 +20,10 @@ struct SubscriptionItemRow: View {
         ItemRow(item: item, subscription: subscription, showUnseenIndicator: isSeen != true, showsSource: false)
     }
     
-    init(item: Item, subscription: Subscription, modelContext: ModelContext) {
+    init(item: Item, subscription: Subscription) {
         self.item = item
         self.subscription = subscription
-        self.state = SubscriptionManager.shared.pooledItemState(for: item.id, subscription: subscription, modelContext: modelContext)
+        self.state = SubscriptionManager.shared.pooledItemState(for: item.id, subscription: subscription)
     }
 
 

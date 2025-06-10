@@ -129,6 +129,8 @@ class JavaScriptManager {
                 }
             }
             
+            let startTime = Date.now
+            
             URLSession.shared.dataTask(with: request) { data, response, error in
                 DispatchQueue.main.async {
                     if let error = error {
@@ -143,6 +145,9 @@ class JavaScriptManager {
                         ),
                         let responseCode = (response as? HTTPURLResponse)?.statusCode
                     {
+                        let elapsedMs: Int = Int(round((Date.now.timeIntervalSince(startTime) * 1000)))
+
+                        log("⏱️ \(elapsedMs) ms for \(url) – loaded \(data.count) bytes", .debug)
                         jsCallback.call(withArguments: [
                             NSNull(), responseString, responseCode
                         ])

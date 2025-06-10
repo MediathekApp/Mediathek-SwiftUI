@@ -224,16 +224,16 @@ class MetadataStore {
         var request = URLRequest(url: URL(string: remoteUrl)!)
         request.cachePolicy = .reloadIgnoringLocalCacheData
 
-        let now = Date.now
+        let startTime = Date.now
 
         let task = URLSession.shared.dataTask(
             with: request,
         ) { data, response, error in
 
             // Measure the time taken for the request
-            let elapsedMs: Int = Int(round((Date.now.timeIntervalSince(now) * 1000)))
+            let elapsedMs: Int = Int(round((Date.now.timeIntervalSince(startTime) * 1000)))
             log(
-                "⏱️ \(elapsedMs) ms for remote cache request for \(urn)",
+                "⏱️ \(elapsedMs) ms for remote cache request for \(urn) – loaded \(data?.count ?? 0) bytes",
                 .debug
             )
 

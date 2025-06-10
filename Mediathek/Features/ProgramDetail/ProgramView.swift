@@ -12,8 +12,6 @@ struct ProgramView: View {
 
     var state: NavigationEntryState
         
-    @Environment(\.modelContext) private var modelContext
-
     var body: some View {
 
         if let program = state.program {
@@ -33,11 +31,10 @@ struct ProgramView: View {
                         
                         withAnimation {
                             if let subscription = state.subscription {
-                                SubscriptionManager.shared.unsubscribe(subscription, modelContext: modelContext)
+                                SubscriptionManager.shared.unsubscribe(subscription)
                             } else {
                                 SubscriptionManager.shared.subscribe(
                                     program,
-                                    modelContext: modelContext
                                 )
                             }
                         }
@@ -45,6 +42,7 @@ struct ProgramView: View {
                     }
 
                 }
+                .padding(.bottom, 4)
 
                 // Stretch to full width
                 Spacer().frame(maxWidth: .infinity)
@@ -61,7 +59,6 @@ struct ProgramView: View {
                                     SubscriptionItemRow(
                                         item: item,
                                         subscription: subscription,
-                                        modelContext: modelContext
                                     )
                                     .padding(.vertical, 4)
                                     .id("sub-"+(item.id))

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftUICore
+import SwiftUI
 
 struct NavigationEntry: Identifiable, Equatable {
     let id = UUID()

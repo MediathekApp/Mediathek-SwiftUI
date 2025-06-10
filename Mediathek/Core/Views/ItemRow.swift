@@ -12,7 +12,6 @@ import SwiftUI
 struct ItemRow: View {
 
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.modelContext) var modelContext
 
     var item: Item? = nil
     var subscription: Subscription? = nil
@@ -45,7 +44,7 @@ struct ItemRow: View {
                     .background(Color(white: 0.5, opacity: 0.1))
                     .cornerRadius(thumbnailCornerRadius)
                     .onTapGesture {
-                        navigateToItem(modelContext: modelContext)
+                        navigateToItem()
                     }
                     .pointingHandCursor(item != nil)
                     .overlay(
@@ -118,7 +117,7 @@ struct ItemRow: View {
                 .contentShape(Rectangle())  // Make the whole view area tappable
                 .pointingHandCursor(item != nil)
                 .onTapGesture {
-                    navigateToItem(modelContext: modelContext)
+                    navigateToItem()
                 }
 
                 // Source
@@ -150,7 +149,6 @@ struct ItemRow: View {
                                             "urn:mediathek:\(publisherId):program:\(program.id)"
                                             GoToProgram(
                                                 programUrn,
-                                                modelContext: modelContext
                                             )
                                         }
                                     }
@@ -165,7 +163,7 @@ struct ItemRow: View {
 
                         let canPlay = ItemCanPlay(item)
                         Button(canPlay ? "Abspielen" : "Nicht verfügbar") {
-                            play(modelContext: modelContext)
+                            play()
                         }
                         .buttonStyle(.bordered)
                         .disabled(!canPlay)
@@ -223,7 +221,7 @@ struct ItemRow: View {
         return URL(string: "about:blank")!
     }
 
-    internal func markSeen(modelContext: ModelContext) {
+    internal func markSeen() {
         if let item,
             let subscription = NavigationManager.shared.currentEntry?.state
                 .subscription,
@@ -233,21 +231,20 @@ struct ItemRow: View {
                 item: item,
                 subscription: subscription,
                 program: program,
-                modelContext: modelContext
             )
         }
     }
 
-    internal func play(modelContext: ModelContext) {
-        markSeen(modelContext: modelContext)
+    internal func play() {
+        markSeen()
         if let item {
             ItemPlay(item)
         }
     }
 
-    internal func navigateToItem(modelContext: ModelContext) {
+    internal func navigateToItem() {
 
-        markSeen(modelContext: modelContext)
+        markSeen()
 
         if let item {
 

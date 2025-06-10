@@ -17,7 +17,6 @@ import SwiftUI
 struct ContentView: View {
 
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.modelContext) private var modelContext
 
     @State private var searchFieldFrame: CGRect = .zero  // State to store the frame
     @State private var showDownloadsButton = true
@@ -136,42 +135,6 @@ struct ContentView: View {
 
                     }
 
-                    //
-                    //                        .onChange(of: scrollOffset) { oldState, newState in
-                    //                            if let newState {
-                    //                                print("Scrolled to Y offset: \(newState)")
-                    //                            } else {
-                    //                                print("Scrolled to Y offset: nil")
-                    //                            }
-                    //                            navManager.currentEntry?.state.scrollOffset = newState
-                    //                        }
-
-                    //                    }
-
-                    //                    if navManager.currentEntry?.viewType == .Program {
-                    //
-                    //                        HStack {
-                    //
-                    //                            if let program = navManager.currentEntry?.state
-                    //                                .program
-                    //                            {
-                    //                                Button("sub") {
-                    //                                    SubscriptionManager.shared.add(
-                    //                                        program,
-                    //                                        modelContext: modelContext
-                    //                                    )
-                    //                                }
-                    //                            }
-                    //
-                    //                        }
-                    //                        .background(
-                    //                            colorScheme == .light
-                    //                                ? Color(white: 0.96) : Color(white: 0.15)
-                    //                        )
-                    //                        .frame(height: 40)
-                    //
-                    //                    }
-
                 } else {
                     ZStack {
 
@@ -184,11 +147,8 @@ struct ContentView: View {
                             .edgesIgnoringSafeArea(.all)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         #endif
-                        //                        Text("Hello")
-                        //                        Spacer()
-                        //                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                     }
-                    //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 }
 
@@ -224,7 +184,7 @@ struct ContentView: View {
                 }.searchCompletion("foo")
             }
             .onSubmit(of: .search) {
-                search(searchText, modelContext: modelContext)
+                search(searchText)
             }
         #endif
 
@@ -244,7 +204,6 @@ struct ContentView: View {
                         log("\(firstURL)")
                         search(
                             firstURL.absoluteString,
-                            modelContext: modelContext
                         )
                         return true
                     }
@@ -255,7 +214,7 @@ struct ContentView: View {
                 ]) {
                     if let firstString = strings.first as? String {
                         log("\(firstString)")
-                        search(firstString, modelContext: modelContext)
+                        search(firstString)
                         return true
                     }
                 }
@@ -268,7 +227,7 @@ struct ContentView: View {
                 { oldState, newState in
                     if let newState {
                         log("Got from Dock: \(newState)")
-                        search(newState, modelContext: modelContext)
+                        search(newState)
                     }
                 }
             )
@@ -311,21 +270,20 @@ struct ContentView: View {
                                     if let urn {
                                         GoToProgram(
                                             urn,
-                                            modelContext: modelContext
                                         )
                                         return
                                     }
                                 }
                             }
 
-                            search(suggestion.query, modelContext: modelContext)
+                            search(suggestion.query)
 
                         },
                         onSearch: { query in
-                            search(query, modelContext: modelContext)
+                            search(query)
                         }
                     )
-                    .frame(width: 200, alignment: .center)
+                    .frame(width: AppConfig.searchFieldWidth, alignment: .center)
                     .frame(minWidth: 150, maxWidth: .infinity)
                 #endif
 
@@ -395,10 +353,9 @@ struct ContentView: View {
     internal static func loadProgram(
         _ urn: String,
         maxAge: TimeInterval = 60 * 10,
-        modelContext: ModelContext
     ) {
 
-        GoToProgram(urn, maxAge: maxAge, modelContext: modelContext)
+        GoToProgram(urn, maxAge: maxAge)
 
     }
 
@@ -425,14 +382,13 @@ struct ContentView: View {
 
     }
 
-    internal func search(_ query: String, modelContext: ModelContext) {
+    internal func search(_ query: String) {
 
         if query.starts(with: "https://") || query.starts(with: "urn:") {
             if query.starts(with: "urn:") && query.contains(":program:") {
                 ContentView.loadProgram(
                     query,
                     maxAge: 0,
-                    modelContext: modelContext
                 )  // maxAge 0 for testing!
             }
             if query.starts(with: "urn:") && query.contains(":item:") {
@@ -645,7 +601,6 @@ struct ContentView: View {
 
     internal func refreshAllSubscriptions() {
         SubscriptionManager.shared.refreshAllSubscriptions(
-            modelContext: modelContext
         )
     }
 

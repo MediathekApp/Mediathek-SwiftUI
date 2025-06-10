@@ -11,7 +11,6 @@ import Foundation
 func GoToProgram(
     _ urn: String,
     maxAge: TimeInterval = MetadataCacheMaxAge,
-    modelContext: ModelContext
 ) {
     
     MetadataStore.shared.requestProgramWithItems(
@@ -25,7 +24,7 @@ func GoToProgram(
             state.program = program
 
             // See if there is an active subscription for this program:
-            let subscription: Subscription? = SubscriptionManager.shared.subscriptionByURN(urn, modelContext: modelContext)
+            let subscription: Subscription? = SubscriptionManager.shared.subscriptionByURN(urn)
             if let subscription {
                 state.subscription = subscription
             }

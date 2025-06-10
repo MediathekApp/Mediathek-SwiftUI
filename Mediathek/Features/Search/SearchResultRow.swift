@@ -32,7 +32,7 @@ struct SearchResultRow: View {
                     .foregroundColor(.primary)
                     .pointingHandCursor()
                     .onTapGesture {
-                        GoToProgram(urn, modelContext: modelContext)
+                        GoToProgram(urn)
                     }
             }
             
@@ -43,6 +43,5 @@ struct SearchResultRow: View {
         
     }
     
-    @Environment(\.modelContext) private var modelContext
 }
 

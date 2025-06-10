@@ -238,7 +238,7 @@ struct SuggestionSearchField: NSViewRepresentable {
         
         private func setupPopup(for searchField: NSSearchField) {
             
-            let width: CGFloat = 200
+            let width: CGFloat = AppConfig.searchFieldWidth
             let height: CGFloat = 150
 
             tableView = NSTableView(frame: NSRect(x: 0, y: 0, width: width, height: height))

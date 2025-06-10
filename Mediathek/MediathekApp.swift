@@ -45,6 +45,8 @@ struct MediathekApp: App {
         URLCache.shared.removeAllCachedResponses()
         URLSession.shared.configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData // don't cache
         URLSession.shared.configuration.urlCache = nil // don't cache
+        
+        SubscriptionManager.shared.modelContext = sharedModelContainer.mainContext
     }
     
     internal func didBecomeActive() {
@@ -54,7 +56,6 @@ struct MediathekApp: App {
             RecommendationService.shared.loadSearchRecommendations()
 
             subscriptionManager.scheduleAutoRefresh(
-                modelContext: sharedModelContainer.mainContext,
                 runInitially: true
             )
 
@@ -84,12 +85,15 @@ struct MediathekApp: App {
             }
             .keyboardShortcut("0")
             .defaultSize(width: 400, height: 580)
-            .windowToolbarStyle(UnifiedWindowToolbarStyle(showsTitle: false))
+            .windowToolbarStyle(.expanded)
             .modelContainer(sharedModelContainer)
             .onChange(of: scenePhase) { oldPhase, newPhase in
                 if newPhase == .active {
                     didBecomeActive()
                 }
+            }
+            .commands {
+                SubscriptionCommands()
             }
 
 
